@@ -82,7 +82,7 @@ class App extends Component {
   }
 
   refreshWeather = () => {
-    fetch(`http://api.openweathermap.org/data/2.5/weather?q=${this.city}&APPID=${this.API_ID}`)
+    fetch(`https://api.openweathermap.org/data/2.5/weather?q=${this.city}&APPID=${this.API_ID}`)
       // this.refreshOffline()
       .then(res => res.json())
       .then(data => {

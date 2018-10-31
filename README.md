@@ -1,5 +1,38 @@
 # React Weather App
 
+## Usage
+
+- The API endpoint will be called every 5 mins
+- If the server responds, the server data will be used
+- Otherwise, 2 mock data sets are stored locally for testing the app; the app will fetch either one randonly
+- Note the difference in the 2 data sets:
+
+- mock1
+```json
+  "weather": [{
+    "id": 800,
+    "main": "Clear",
+    "description": "clear sky",
+    "icon": "01d"
+  }],
+```
+
+- mock2
+
+```json
+  "weather": [{
+    "id": "ABC",
+    "main": "Clear",
+    "description": "clear sky",
+    "icon": "01d"
+  }],
+```
+
+- The history of each API call is stored in the History section
+- The blue buttons with the Unix timestamp allow toggling between the state history
+- Please click the red refresh button to refresh the page and reset the timers
+
+
 ## Requirements
 
 Please create a React app for us that queries the current weather from openweathermap.org and displays the data fetched for the user.
