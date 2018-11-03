@@ -13,10 +13,18 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.cardIdCount = -1;
-    this.stateHistory = {};
+    this.STATE_HISTORY_LOCAL_KEY = 'reactWeatherLocalHistory';
     this.refreshTiimer = 5 * 60 * 1000;
     this.offlineDelay = 50;
     this.state = { loading: true, countDown: this.refreshTiimer, isOffline: false, errorMessage:"" };
+    this.stateHistory = {};
+    this.curTimeStamp = null;
+    this.STATE_HISTORY_LIMIT = 6;
+    try {
+      this.stateHistory = JSON.parse(localStorage.getItem(this.STATE_HISTORY_LOCAL_KEY));
+    } catch(err) {
+      console.log(err);
+    }
     this.interval = null;
     this.countDownInterval = null;
     this.city = "Berlin";
@@ -27,14 +35,32 @@ class App extends Component {
   }
 
 
-  componentWillMount() {
+  componentDidMount() {
     this.interval = setInterval(() => this.refreshWeather(), this.refreshTiimer);
     this.countDownInterval = setInterval(() => this.setState((state, props) => state.countDown -= 1000), 1000);
     this.refreshWeather();
   }
 
 
-  restartIntervals() {
+  
+  componentWillUnmount() {
+    clearInterval(this.interval);
+    clearInterval(this.countDownInterval);
+  }
+
+  clearWeatherHistory = () => {
+    console.log('Clearing history!');
+    this.setState({ loading: true });
+    this.stateHistory = {};
+    try {
+      localStorage.setItem(this.STATE_HISTORY_LOCAL_KEY, JSON.stringify(this.stateHistory));
+    } catch (err) {
+      console.log(err);
+    }
+    this.setState({ loading: false });
+  }
+
+  restartIntervals = () => {
     clearInterval(this.interval);
     clearInterval(this.countDownInterval);
     this.interval = setInterval(() => this.refreshWeather(), this.refreshTiimer);
@@ -42,12 +68,6 @@ class App extends Component {
     this.setState({
       countDown: this.refreshTiimer
     });
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
-    clearInterval(this.countDownInterval);
-
   }
   // additional parsing may be implemented here
   sanitizeDataFunc = (data, timestamp) => {
@@ -106,6 +126,40 @@ class App extends Component {
         let timestamp = String(+ new Date());
         let sanitizedData = this.sanitizeDataFunc(data, timestamp);
         this.stateHistory[timestamp] = sanitizedData;
+        this.curTimeStamp = timestamp;
+
+        let stateKeys = Object.keys(this.stateHistory);
+
+
+        // if (stateKeys.length > this.STATE_HISTORY_LIMIT) {
+          // console.error ('State limit exceeded!');
+          // keep state history sorted and filtered
+          stateKeys.sort ( (a,b) => b-a);
+          let i = 0;
+          let selectedKeys = [];
+          while (i < this.STATE_HISTORY_LIMIT) {
+            selectedKeys.push(stateKeys[i]);
+            i ++;
+          }
+          console.log(selectedKeys);
+          const filtered = stateKeys
+            .filter(key => selectedKeys.includes(key))
+            .reduce((obj, key) => {
+              obj[key] = this.stateHistory[key];
+              return obj;
+            }, {});
+
+          // delete filtered[timestamp.toString()];
+
+          this.stateHistory = filtered;
+
+        // }
+
+        try {
+          localStorage.setItem(this.STATE_HISTORY_LOCAL_KEY, JSON.stringify(this.stateHistory));
+        } catch (err) {
+          console.log(err);
+        }
         // reset states
         this.setState({ sanitizedData: sanitizedData, loading: false });
         this.restartIntervals();
@@ -133,18 +187,11 @@ class App extends Component {
           <Header title={this.city} />
           {this.state.isOffline ? (<p>Offline! {this.state.errorMessage}</p>) : (<p>LIVE</p>)}
           <button className="btn-danger" onClick={this.refreshWeather}>Refresh</button>
+          <button className="btn-danger ml-2" onClick={this.clearWeatherHistory}>Clear History</button>
           <p>Refreshing in {Math.floor(this.state.countDown / 1000)} seconds</p>
         </div>
         <div className="row mt-4 mb-4">
           <h5>History</h5>
-        </div>
-        <div className="row">
-          {this.stateHistory &&
-            Object.keys(this.stateHistory).map(elem => {
-              return (<StateHistory key={elem} revertAction={this.revertState} curState={elem} data={this.stateHistory[elem]} />)
-            })
-          }
-
         </div>
         <div className="row"><h5>Conditions for {this.state.sanitizedData.timestamp}</h5></div>
         <div className="row">
@@ -153,6 +200,18 @@ class App extends Component {
             return (<WeatherCards id={this.cardIdCount} key={this.cardIdCount} title={element} data={this.state.sanitizedData[element]} />)
           })}
         </div>
+
+        <div className="row">
+          {this.stateHistory &&
+            Object.keys(this.stateHistory).map(elem => {
+              {/* (elem !== this.curTimeStamp) && */}
+              return  (<StateHistory key={elem} revertAction={this.revertState} curState={elem} data={this.stateHistory[elem]} />)
+            })
+          }
+
+        </div>
+
+
       </div>
     ) : (<p>'Loading'</p>);
   }
