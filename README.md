@@ -1,5 +1,22 @@
 # React Weather App
 
+## Feedback
+
+[Ideal solution](https://drive.google.com/open?id=1R7oMX79Gy2YnVKwslYMPAS2eRXRLkEOU)
+
+### Notes
+
+- Simple is beautiful
+- Note css structure in ideal solution
+- Note the use of PropTypes
+- DO NOT use componentWillMount() for async data load; use componentDidMount instead
+- Note the usage of render functions for cleaner and more readable code
+- Note the differences in storing current state and history
+  - Arrays vs Objects: why use objects and then convert back to array?
+  - No need for a seperate data structure for histroy!
+- State reversal was not a User Story! This made the code messier and more bloated (watch for feature creep)
+
+
 ## Usage
 
 - The API endpoint will be called every 5 mins
